@@ -26,12 +26,16 @@ export default function CreateProfile() {
   }, [router]);
 
   const healthGoalOptions = [
+    "Weight Loss",
     "Weight Management",
+    "Digestion Improvement",
     "Better Digestion",
     "Improve Sleep",
+    "Energy Boost",
     "Increase Energy",
     "Stress Management",
     "Immunity Boost",
+    "Diabetes-friendly",
   ];
 
   const toggleGoal = (goal) => {

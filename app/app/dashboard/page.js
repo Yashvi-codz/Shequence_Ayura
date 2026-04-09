@@ -277,6 +277,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto flex justify-around">
           {[
             {icon:'🏠',label:'Home',href:'/app/dashboard',active:true},
+            {icon:'🍽️',label:'Meals',href:'/app/meals'},
+            {icon:'🥘',label:'Pantry',href:'/app/pantry'},
             {icon:'📊',label:'Logs',href:'/app/logs'},
             {icon:'💬',label:'Chat',href:'/app/chat'},
             {icon:'📚',label:'Learn',href:'/app/learn'},

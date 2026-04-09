@@ -94,10 +94,14 @@ export default function ProfilePage() {
   };
 
   const healthGoalOptions = [
+    'Weight Loss',
     'Weight Management',
-    'Better Digestion', 
-    'Improve Sleep',
+    'Digestion Improvement',
+    'Better Digestion',
+    'Energy Boost',
     'Increase Energy',
+    'Diabetes-friendly',
+    'Improve Sleep',
     'Stress Management',
     'Immunity Boost'
   ];
