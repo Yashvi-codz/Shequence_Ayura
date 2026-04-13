@@ -147,15 +147,18 @@ export default function Dashboard() {
     {/* Card 1 - Log Your Pantry */}
     <div className="text-center">
       <div className="rounded-3xl overflow-hidden shadow-lg bg-green-100 p-8 hover:shadow-xl transition border-4 border-green-500 hover:border-green-600">
-        <Link href="/app/pantry">
-          <div className="flex flex-col items-center">
-            <span className="text-5xl mb-4">🥘</span>
-            <h3 className="text-2xl font-semibold text-orange-900">
-              Log Your Pantry
-            </h3>
-            <p className="text-sm text-orange-700 mt-2">Manage your ingredients</p>
-          </div>
+        <Link href="/app/pantry" className="flex flex-col items-center">
+          <span className="text-5xl mb-4">🥘</span>
+          <h3 className="text-2xl font-semibold text-orange-900">
+            Log Your Pantry
+          </h3>
+          <p className="text-sm text-orange-700 mt-2">Manage your ingredients</p>
         </Link>
+        <p className="text-xs text-orange-600 mt-4 font-semibold">
+          <Link href="/app/recipes" className="underline hover:no-underline">
+            Recipe matches from pantry →
+          </Link>
+        </p>
       </div>
     </div>
 
@@ -260,7 +263,7 @@ export default function Dashboard() {
                 <div className="text-xs font-semibold text-primary mb-2 uppercase">{meal.time}</div>
                 <h4 className="font-bold text-lg mb-2 text-dark-text">{meal.name}</h4>
                 <p className="text-gray-text text-sm mb-4">{meal.desc}</p>
-                <button className="text-primary font-semibold hover:underline">View Recipe →</button>
+                <Link href="/app/recipes" className="text-primary font-semibold hover:underline">View pantry recipes →</Link>
               </div>
             ))}
           </div>

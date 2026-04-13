@@ -343,7 +343,7 @@ export default function MealsPage() {
               <h2 className="text-2xl font-bold text-dark-text">Health goal + Mood</h2>
               <p className="text-gray-text mt-1">Change these and the plan updates automatically.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => handleGenerateWeeklyPlan()}
@@ -354,6 +354,9 @@ export default function MealsPage() {
               </button>
               <a href="/app/pantry" className="btn-secondary px-5 py-2 text-center">
                 Edit pantry
+              </a>
+              <a href="/app/recipes" className="btn-secondary px-5 py-2 text-center">
+                Pantry recipes
               </a>
             </div>
           </div>

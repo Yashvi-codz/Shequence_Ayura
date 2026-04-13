@@ -5,7 +5,7 @@ import { fetchRecipesAndMatch } from '@/lib/recipeService';
 export async function POST(request) {
   try {
     const { pantryItems } = await request.json();
-    
+
     if (!pantryItems || !Array.isArray(pantryItems) || pantryItems.length === 0) {
       return NextResponse.json(
         { error: 'Please provide pantry items' },
@@ -13,21 +13,19 @@ export async function POST(request) {
       );
     }
 
-    // Call the recipe service
     const results = await fetchRecipesAndMatch(pantryItems);
-    
-    // Transform results to match frontend expectations
+
     const meals = (results.recipes || []).map((recipe) => ({
-      id: Math.random().toString(36),
+      id: recipe.id,
       name: recipe.title,
-      doshaTag: recipe.matchPercentage >= 80 ? 'highly_balancing' : 'neutral',
-      pantryMatchPercent: recipe.matchPercentage,
+      doshaTag: (recipe.matchPercentage ?? recipe.pantryMatchPercent ?? 0) >= 80 ? 'highly_balancing' : 'neutral',
+      pantryMatchPercent: recipe.matchPercentage ?? recipe.pantryMatchPercent ?? 0,
       missingIngredients: recipe.missingIngredients,
-      cookTimeMinutes: recipe.recipe?.cookTimeMinutes || 30,
+      cookTimeMinutes: recipe.recipe?.cookTimeMinutes ?? 30,
       macros: {
-        calories: recipe.recipe?.calories || null,
-        protein: recipe.recipe?.protein || null,
-        carbs: recipe.recipe?.carbs || null,
+        calories: recipe.recipe?.calories ?? null,
+        protein: recipe.recipe?.protein ?? null,
+        carbs: recipe.recipe?.carbs ?? null,
       },
     }));
 

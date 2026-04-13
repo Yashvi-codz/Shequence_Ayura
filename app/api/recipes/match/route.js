@@ -1,27 +1,37 @@
-// app/api/recipes/match/route.js
-
 import { NextResponse } from 'next/server';
 import { fetchRecipesAndMatch } from '@/lib/recipeService';
 
 export async function POST(request) {
   try {
-    const { pantryItems } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body', success: false }, { status: 400 });
+    }
+
+    const { pantryItems } = body || {};
 
     if (!pantryItems || !Array.isArray(pantryItems) || pantryItems.length === 0) {
       return NextResponse.json(
-        { error: 'Please provide pantry items' },
+        { error: 'Please provide pantry items', success: false },
         { status: 400 }
       );
     }
 
-    // Fetch and match recipes
     const results = await fetchRecipesAndMatch(pantryItems);
 
     return NextResponse.json(results, { status: 200 });
   } catch (error) {
     console.error('Recipe matching API error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to match recipes' },
+      {
+        success: false,
+        error: error?.message || 'Failed to match recipes',
+        pantryItems: [],
+        totalCandidates: 0,
+        recipes: [],
+      },
       { status: 500 }
     );
   }

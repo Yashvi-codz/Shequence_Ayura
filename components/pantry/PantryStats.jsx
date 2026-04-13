@@ -2,14 +2,11 @@
 
 export default function PantryStats({ pantryItems, matchedRecipes }) {
   const totalRecipes = matchedRecipes?.length || 0;
-  const averageMatch = matchedRecipes?.length > 0
-    ? Math.round(
-        matchedRecipes.reduce((sum, recipe) => sum + recipe.matchPercentage, 0) /
-          matchedRecipes.length
-      )
-    : 0;
 
-  const topMatch = matchedRecipes?.[0]?.matchPercentage || 0;
+  const topMatch =
+    matchedRecipes?.[0]?.pantryMatchPercent ??
+    matchedRecipes?.[0]?.matchPercentage ??
+    0;
 
   return (
     <div className="grid grid-cols-3 gap-4 mb-6">
