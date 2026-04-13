@@ -1,292 +1,315 @@
-'use client';
+import Link from "next/link";
 
-import { useEffect, useState, useMemo } from 'react';
-import Cookies from 'js-cookie';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import { AYURVEDIC_RECIPES } from '@/lib/ayurveda/recipes';
-import {
-  buildPantryMatchSet,
-  recipeIngredientInPantrySet,
-} from '@/lib/ingredientNormalizer';
-
-const STORAGE_MATCH = 'ayuraRecipeMatchBundle';
-const GROCERY_KEY = 'ayuraGroceryList';
-
-function readPantry() {
-  try {
-    const raw = localStorage.getItem('pantryItems');
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.map((s) => String(s).toLowerCase().trim()).filter(Boolean)
-      : [];
-  } catch {
-    return [];
-  }
+function toDisplayName(raw = "") {
+  return decodeURIComponent(String(raw))
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function readBundle() {
+function slugify(raw = "") {
+  return String(raw).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function imageFallbackFor(name) {
+  const seed = encodeURIComponent(`${name}-ayura`);
+  return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=c9ffbf,b6e3f4,ffdfbf,ffd5dc,d1d4f9`;
+}
+
+function buildMockRecipe(recipeName) {
+  const lower = recipeName.toLowerCase();
+  const base = {
+    ingredients: [
+      "2 tbsp ghee",
+      "1 tsp cumin seeds",
+      "1/2 tsp turmeric powder",
+      "1 tsp grated ginger",
+      "1/2 tsp rock salt",
+      "1 tbsp fresh coriander",
+    ],
+    steps: [
+      "Wash and prep all ingredients before starting; keep spices measured to avoid overcooking.",
+      "Warm ghee on low-medium heat, then add cumin and ginger until aromatic (do not burn).",
+      "Add main vegetables or grains and sauté for 2-3 minutes to coat with spices.",
+      "Add water as needed, cover, and cook until soft and easy to digest.",
+      "Finish with coriander and serve warm. Avoid eating directly from the fridge.",
+    ],
+    tags: ["Ayurvedic", "Home-style", "Balanced"],
+  };
+
+  if (lower.includes("dosa")) {
+    return {
+      ...base,
+      ingredients: [
+        "1 cup dosa batter",
+        "1 tsp sesame oil",
+        "2 medium potatoes (boiled, mashed)",
+        "1/2 tsp mustard seeds",
+        "6 curry leaves",
+        "1/4 tsp turmeric",
+        "1 small onion (optional, finely sliced)",
+        "1 tsp salt",
+      ],
+      steps: [
+        "Heat a tawa and spread a ladle of batter into a thin circle.",
+        "Drizzle sesame oil around edges; cook on medium heat until crisp.",
+        "For masala filling, temper mustard and curry leaves in a pan, then add onion and turmeric.",
+        "Add mashed potatoes with salt and cook for 2-3 minutes until combined.",
+        "Place filling in dosa, fold, and serve hot with chutney.",
+      ],
+      tags: ["South Indian", "Comfort Meal", "Vata-friendly (when warm)"],
+    };
+  }
+
+  if (lower.includes("aloo")) {
+    return {
+      ...base,
+      ingredients: [
+        "3 medium potatoes, cubed",
+        "1 tbsp ghee",
+        "1/2 tsp cumin seeds",
+        "1/4 tsp asafoetida (hing)",
+        "1/2 tsp turmeric powder",
+        "1 tsp coriander powder",
+        "1/2 tsp salt",
+        "1 tbsp chopped coriander",
+      ],
+      steps: [
+        "Boil or steam potatoes until just tender, then cube evenly.",
+        "Heat ghee, add cumin and hing; keep flame low to protect digestive qualities.",
+        "Add turmeric and coriander powder, then toss in potato cubes gently.",
+        "Cook 4-5 minutes until coated and lightly crisp on edges.",
+        "Finish with coriander and serve warm with soft roti or rice.",
+      ],
+      tags: ["North Indian", "Simple Sabzi", "Grounding"],
+    };
+  }
+
+  return {
+    ...base,
+    ingredients: [
+      `1 cup main ingredient for ${recipeName}`,
+      "1 tbsp ghee",
+      "1 tsp cumin seeds",
+      "1/2 tsp turmeric powder",
+      "1 tsp grated ginger",
+      "1/2 tsp salt",
+      "2 cups water (adjust as needed)",
+    ],
+    tags: ["Indian", "Wholesome", "Beginner-friendly"],
+  };
+}
+
+function buildAyurvedicNotes(recipeName) {
+  const n = recipeName.toLowerCase();
+  const isCooling = n.includes("raita") || n.includes("chaas") || n.includes("cucumber");
+  const isHeavy = n.includes("fried") || n.includes("pakora") || n.includes("paratha");
+
+  return {
+    vata: [
+      isCooling ? "Can aggravate Vata if served cold; prefer at room temperature." : "Generally balances Vata when served warm with ghee.",
+      "Use ginger/cumin seasoning for better digestion.",
+    ],
+    pitta: [
+      isCooling ? "Usually soothing for Pitta; keep spices mild." : "Can balance Pitta with moderate spice and less chili.",
+      "Avoid very sour or overly salty adjustments.",
+    ],
+    kapha: [
+      isHeavy ? "May aggravate Kapha if oily/heavy; keep portions moderate." : "Supports Kapha when lightly spiced and not too oily.",
+      "Add black pepper or dry ginger to reduce heaviness.",
+    ],
+  };
+}
+
+function buildTips(recipeName) {
+  return [
+    "Wash produce well and use clean chopping boards for raw and cooked ingredients.",
+    "Cook on medium heat to preserve flavor and prevent spice bitterness.",
+    "Eat this recipe fresh and warm; avoid reheating multiple times.",
+    `Best enjoyed for lunch when digestion is strongest, especially for ${recipeName}.`,
+    "Avoid pairing with ice-cold drinks immediately after meals.",
+  ];
+}
+
+async function fetchMealDbRecipe(recipeName) {
   try {
-    const raw = sessionStorage.getItem(STORAGE_MATCH);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.recipes)) return null;
-    return data;
+    const query = encodeURIComponent(recipeName);
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) throw new Error("Meal DB request failed");
+    const data = await res.json();
+    const meal = data?.meals?.[0];
+    if (!meal) return null;
+
+    const ingredients = [];
+    for (let i = 1; i <= 20; i += 1) {
+      const ingredient = meal[`strIngredient${i}`];
+      const measure = meal[`strMeasure${i}`];
+      if (!ingredient || !ingredient.trim()) continue;
+      ingredients.push(`${(measure || "").trim()} ${ingredient.trim()}`.trim());
+    }
+
+    const steps = String(meal.strInstructions || "")
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+
+    return {
+      title: toDisplayName(meal.strMeal || recipeName),
+      image: meal.strMealThumb || null,
+      ingredients,
+      steps: steps.length ? steps : null,
+      tags: [meal.strArea || "Indian", meal.strCategory || "Main Course"].filter(Boolean),
+      source: "TheMealDB",
+    };
   } catch {
     return null;
   }
 }
 
-function formatDisplay(str) {
-  if (!str) return '';
-  return String(str)
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
+async function fetchUnsplashLikeImage(recipeName) {
+  try {
+    const query = encodeURIComponent(`${recipeName} indian food`);
+    const res = await fetch(`https://source.unsplash.com/1600x900/?${query}`, {
+      redirect: "follow",
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return res.url || null;
+  } catch {
+    return null;
+  }
 }
 
-export default function RecipeDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const rawId = params?.id != null ? decodeURIComponent(String(params.id)) : '';
+async function getRecipeData(id) {
+  const title = toDisplayName(id);
+  const mealDb = await fetchMealDbRecipe(title);
+  const mock = buildMockRecipe(title);
+  const imageFromApi = mealDb?.image || (await fetchUnsplashLikeImage(title));
 
-  const [pantryItems, setPantryItems] = useState([]);
-  const [recipe, setRecipe] = useState(null);
-  const [hydrated, setHydrated] = useState(false);
+  return {
+    id: slugify(id),
+    title,
+    image: imageFromApi || imageFallbackFor(title),
+    ingredients: mealDb?.ingredients?.length ? mealDb.ingredients : mock.ingredients,
+    steps: mealDb?.steps?.length ? mealDb.steps : mock.steps,
+    tags: mealDb?.tags?.length ? mealDb.tags : mock.tags,
+    source: mealDb?.source || "Ayura Fallback Generator",
+    ayurvedic: buildAyurvedicNotes(title),
+    tips: buildTips(title),
+  };
+}
 
-  useEffect(() => {
-    const token = Cookies.get('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    const pantry = readPantry();
-    setPantryItems(pantry);
-    const bundle = readBundle();
-    const fromSession = bundle?.recipes?.find((r) => String(r.id) === String(rawId));
-    if (fromSession) {
-      setRecipe(fromSession);
-      setHydrated(true);
-      return;
-    }
-    const curated = AYURVEDIC_RECIPES.find((r) => r.id === rawId);
-    if (curated) {
-      const pantrySet = buildPantryMatchSet(pantry);
-      const matched = [];
-      const missing = [];
-      curated.ingredients.forEach((ing) => {
-        if (recipeIngredientInPantrySet(ing, pantrySet)) matched.push(ing);
-        else missing.push(ing);
-      });
-      const total = curated.ingredients.length;
-      const pct = total ? Math.round((matched.length / total) * 100) : 0;
-      setRecipe({
-        id: curated.id,
-        title: curated.title,
-        image: null,
-        ingredients: curated.ingredients,
-        instructions: [
-          `Prepare ${curated.title} using fresh ingredients suited to your dosha.`,
-          'Cook slowly until well combined; adjust spices to taste.',
-          'Serve warm and eat mindfully.',
-        ],
-        instructionsAvailable: true,
-        pantryMatchPercent: pct,
-        matchedIngredients: matched,
-        missingIngredients: missing,
-        source: 'ayura-curated',
-      });
-    } else {
-      setRecipe(null);
-    }
-    setHydrated(true);
-  }, [router, rawId]);
+function Card({ title, icon, children }) {
+  return (
+    <section className="rounded-2xl border border-emerald-100 bg-white/90 shadow-sm p-5 md:p-6">
+      <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+        <span>{icon}</span>
+        {title}
+      </h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
 
-  const pantrySet = useMemo(() => buildPantryMatchSet(pantryItems), [pantryItems]);
-
-  const summary = useMemo(() => {
-    if (!recipe?.ingredients) return null;
-    const matched = [];
-    const missing = [];
-    recipe.ingredients.forEach((ing) => {
-      if (recipeIngredientInPantrySet(ing, pantrySet)) matched.push(ing);
-      else missing.push(ing);
-    });
-    const total = recipe.ingredients.length;
-    const pct = total ? Math.round((matched.length / total) * 100) : 0;
-    return { matched, missing, pct };
-  }, [recipe, pantrySet]);
-
-  function addMissingToPantry() {
-    const miss = summary?.missing?.length ? summary.missing : recipe?.missingIngredients || [];
-    if (!miss.length) return;
-    const merged = Array.from(
-      new Set([...pantryItems, ...miss.map((m) => String(m).toLowerCase().trim())])
-    ).filter(Boolean);
-    localStorage.setItem('pantryItems', JSON.stringify(merged));
-    setPantryItems(merged);
-  }
-
-  function addMissingToGrocery() {
-    const miss = summary?.missing?.length ? summary.missing : recipe?.missingIngredients || [];
-    if (!miss.length) return;
-    try {
-      const raw = localStorage.getItem(GROCERY_KEY);
-      const existing = raw ? JSON.parse(raw) : [];
-      const list = Array.isArray(existing) ? existing : [];
-      const merged = Array.from(new Set([...list, ...miss.map((m) => formatDisplay(m))])).filter(Boolean);
-      localStorage.setItem(GROCERY_KEY, JSON.stringify(merged));
-    } catch {
-      localStorage.setItem(GROCERY_KEY, JSON.stringify(miss.map((m) => formatDisplay(m))));
-    }
-    alert('Missing items added to your grocery list.');
-  }
-
-  if (!hydrated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 flex items-center justify-center">
-        <p className="text-gray-text">Loading…</p>
-      </div>
-    );
-  }
-
-  if (!recipe) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
-        <div className="max-w-3xl mx-auto px-4 py-12">
-          <div className="card text-center py-12">
-            <p className="text-dark-text font-semibold mb-4">We could not load this recipe.</p>
-            <p className="text-gray-text text-sm mb-6">
-              Open matches from your pantry again, or pick a recipe from the list.
-            </p>
-            <Link href="/app/recipes" className="btn-primary px-6 py-3 inline-block">
-              Back to recipe matches
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const instructions = Array.isArray(recipe.instructions) ? recipe.instructions : [];
-  const hasInstructions =
-    recipe.instructionsAvailable !== false && instructions.filter(Boolean).length > 0;
-  const displayPct = summary?.pct ?? recipe.pantryMatchPercent ?? recipe.matchPercentage ?? 0;
-  const matchedList = summary?.matched ?? recipe.matchedIngredients ?? [];
-  const missingList = summary?.missing ?? recipe.missingIngredients ?? [];
+export default async function RecipeDetailPage({ params }) {
+  const id = params?.id ? decodeURIComponent(String(params.id)) : "";
+  const recipe = await getRecipeData(id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
-      <div className="bg-white border-b border-gray-200 py-4 px-4">
-        <div className="max-w-3xl mx-auto flex flex-wrap gap-3 items-center justify-between">
-          <button type="button" onClick={() => router.back()} className="btn-secondary px-4 py-2">
-            ← Back
-          </button>
-          <Link href="/app/recipes" className="text-primary font-semibold text-sm hover:underline">
-            All matches
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-amber-50/60 to-sky-100/60 pb-20">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/app/recipes" className="btn-secondary px-4 py-2">
+            ← Back to Recipes
           </Link>
+          <button type="button" className="btn-primary px-4 py-2">
+            Save Recipe
+          </button>
         </div>
-      </div>
 
-      <article className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-black text-dark-text mb-2">{formatDisplay(recipe.title)}</h1>
-        {recipe.source && (
-          <p className="text-xs text-gray-text mb-4">
-            Source: <span className="font-semibold">{recipe.source}</span>
-          </p>
-        )}
-
-        {recipe.image && (
-          <div className="mb-6 rounded-xl overflow-hidden border border-gray-200 bg-white">
+        <article className="space-y-6">
+          <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={recipe.image} alt="" className="w-full max-h-80 object-cover" />
+            <img src={recipe.image} alt={recipe.title} className="w-full h-64 md:h-96 object-cover" />
+            <div className="p-5 md:p-6 bg-gradient-to-r from-white via-emerald-50/40 to-sky-50/50">
+              <p className="text-xs font-semibold text-slate-500">Source: {recipe.source}</p>
+              <h1 className="mt-1 text-3xl md:text-4xl font-black text-slate-900">{recipe.title}</h1>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recipe.tags.map((tag) => (
+                  <span key={tag} className="px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200 bg-emerald-100/60 text-emerald-800">
+                    {tag}
+                  </span>
+                ))}
+                <span className="px-3 py-1 rounded-full text-xs font-semibold border border-blue-200 bg-blue-100 text-blue-800">Vata-aware</span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold border border-amber-200 bg-amber-100 text-amber-800">Pitta-aware</span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold border border-cyan-200 bg-cyan-100 text-cyan-800">Kapha-aware</span>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="card mb-6">
-          <h2 className="text-lg font-bold text-dark-text mb-2">Pantry match</h2>
-          <p className="text-3xl font-black text-primary">{displayPct}%</p>
-          <p className="text-sm text-gray-text mt-1">
-            {matchedList.length} of {recipe.ingredients?.length || 0} ingredients from your Store Room
-          </p>
-        </div>
-
-        <div className="card mb-6">
-          <h2 className="text-lg font-bold text-dark-text mb-3">Ingredients</h2>
-          <ul className="space-y-2">
-            {(recipe.ingredients || []).map((ing, i) => {
-              const have = recipeIngredientInPantrySet(ing, pantrySet);
-              return (
-                <li
-                  key={`${i}-${ing}`}
-                  className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${
-                    have ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  <span>{have ? '✓' : '·'}</span>
-                  <span className="text-dark-text">{formatDisplay(ing)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="card">
-            <h3 className="font-bold text-green-800 mb-2">In your pantry</h3>
-            {matchedList.length ? (
-              <ul className="text-sm space-y-1 text-dark-text">
-                {matchedList.map((m) => (
-                  <li key={m}>✓ {formatDisplay(m)}</li>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card title="Ingredients" icon="🧾">
+              <ul className="space-y-2">
+                {recipe.ingredients.map((item, idx) => (
+                  <li key={`${idx}-${item}`} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    {item}
+                  </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-sm text-gray-text">No direct matches yet — add items from the list below.</p>
-            )}
-          </div>
-          <div className="card">
-            <h3 className="font-bold text-amber-900 mb-2">Missing</h3>
-            {missingList.length ? (
-              <ul className="text-sm space-y-1 text-dark-text">
-                {missingList.map((m) => (
-                  <li key={m}>· {formatDisplay(m)}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-gray-text">You have everything listed.</p>
-            )}
-          </div>
-        </div>
+            </Card>
 
-        <div className="card mb-6">
-          <h2 className="text-lg font-bold text-dark-text mb-3">Instructions</h2>
-          {hasInstructions ? (
-            <ol className="list-decimal list-inside space-y-3 text-dark-text text-sm leading-relaxed">
-              {instructions.map((step, i) => (
-                <li key={i} className="pl-1">
-                  {step}
+            <Card title="Step-by-step Instructions" icon="👩‍🍳">
+              <ol className="space-y-3">
+                {recipe.steps.map((step, idx) => (
+                  <li key={`${idx}-${step}`} className="flex gap-3 text-sm text-slate-700">
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          </div>
+
+          <Card title="Ayurvedic Benefits" icon="🌿">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-xl border border-rose-100 bg-rose-50 p-4">
+                <h3 className="font-bold text-rose-800 mb-2">Vata</h3>
+                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                  {recipe.ayurvedic.vata.map((point) => <li key={point}>{point}</li>)}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                <h3 className="font-bold text-amber-800 mb-2">Pitta</h3>
+                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                  {recipe.ayurvedic.pitta.map((point) => <li key={point}>{point}</li>)}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-cyan-100 bg-cyan-50 p-4">
+                <h3 className="font-bold text-cyan-800 mb-2">Kapha</h3>
+                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                  {recipe.ayurvedic.kapha.map((point) => <li key={point}>{point}</li>)}
+                </ul>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Preparation Tips" icon="⚠️">
+            <ul className="space-y-2">
+              {recipe.tips.map((tip) => (
+                <li key={tip} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  {tip}
                 </li>
               ))}
-            </ol>
-          ) : (
-            <p className="text-gray-text text-sm">
-              Step-by-step instructions are not available for this recipe from the data source. Use the
-              ingredient list above, cook mindfully, and adjust spices for your dosha. You can also open a
-              curated Ayura recipe from the meal planner for fuller guidance.
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button type="button" className="btn-primary px-5 py-2" onClick={addMissingToPantry}>
-            Add missing to pantry
-          </button>
-          <button type="button" className="btn-secondary px-5 py-2" onClick={addMissingToGrocery}>
-            Add missing to grocery list
-          </button>
-        </div>
-      </article>
+            </ul>
+          </Card>
+        </article>
+      </div>
     </div>
   );
 }
