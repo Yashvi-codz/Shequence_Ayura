@@ -1,14 +1,63 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { doshaInfo } from '@/lib/doshaCalculator';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Example: you already have userDosha from localStorage
+const getTips = (topic, dosha) => {
+  const baseTips = {
+    meditation: ["Start with 5–10 mins", "Focus on breath", "Stay consistent"],
+    stress: ["Deep breathing", "Take breaks", "Journal thoughts"],
+    insights: ["Reflect daily", "Track emotions", "Gratitude"],
+    exercise: ["Stretching", "Yoga/walking", "Stay active"],
+    sleep: ["Sleep on time", "Avoid screens", "Cool room"],
+    routine: ["Wake early", "Eat on time", "Consistency"],
+  };
+
+  const doshaAdditions = {
+    vata: " → Focus on grounding & calmness",
+    pitta: " → Avoid overheating & intensity",
+    kapha: " → Stay active & energized",
+  };
+
+  return baseTips[topic].map(
+    (tip) => tip + (dosha ? doshaAdditions[dosha] : "")
+  );
+};
+
+const seasonsData = {
+  summer: {
+    title: "Summer",
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+    foods: "Cooling fruits (🍉watermelon, 🥥coconut), cucumbers, 🌿mint",
+    activities: "🏊 Swimming,🚶 Evening walks,🧘 Cooling pranayama",
+  },
+  winter: {
+    title: "Winter",
+    image: "https://images.unsplash.com/photo-1483664852095-d6cc6870702d",
+    foods: "Warming spices(🫚ginger, 🌰cinnamon), 🥕root vegetables, 🧈ghee",
+    activities: "🏠Indoor exercise, 🔥hot yoga, 🧘warming practices",
+  },
+  spring: {
+    title: "Spring",
+    image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946",
+    foods: "🥗Light foods, 🥬bitter greens, 🌶pungent spices",
+    activities: "🏃Vigorous exercise, 🧼cleansing, 🤸active movement",
+  },
+  autumn: {
+    title: "Autumn",
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+    foods: "🥣Grounding foods, 🍠sweet vegetables, 🌾warming grains",
+    activities: "🚶Moderate activity, 🧘grounding practices, 📅regular routines",
+  },
+};
 
 export default function LearnPage() {
   const [activeTab, setActiveTab] = useState('doshas');
   const [expandedSection, setExpandedSection] = useState(null);
-  const [foodCheck, setFoodCheck] = useState({ food1: '', food2: '', result: null });
-  const [loading, setLoading] = useState(false);
-  const [routine, setRoutine] = useState(null);
   const [userDosha, setUserDosha] = useState('pitta');
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('doshaResult');
@@ -18,38 +67,6 @@ export default function LearnPage() {
       setExpandedSection(result.dominant);
     }
   }, []);
-
-  const checkFoodCombo = async () => {
-    if (!foodCheck.food1 || !foodCheck.food2) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/learn/food-combos?food1=${foodCheck.food1}&food2=${foodCheck.food2}`);
-      const data = await res.json();
-      setFoodCheck({ ...foodCheck, result: data });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRoutine = async (dosha) => {
-    try {
-      const res = await fetch(`/api/learn/routine?dosha=${dosha}`);
-      const data = await res.json();
-      setRoutine(data.routine);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'routine') {
-      fetchRoutine(userDosha);
-    }
-  }, [activeTab, userDosha]);
-
-  const foodOptions = ['milk', 'fish', 'ghee', 'honey', 'rice', 'mung dal', 'yogurt', 'fruit', 'lemon', 'meat', 'banana'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24 px-4 py-8">
@@ -61,8 +78,7 @@ export default function LearnPage() {
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {[
             { id: 'doshas', label: 'Dosha Learning' },
-            { id: 'food', label: 'Food Compatibility', },
-            { id: 'routine', label: 'Daily Routine' },
+            { id: 'relax', label: 'LifeStyle & Mind' },
             { id: 'seasonal', label: 'Seasonal Tips' }
           ].map(tab => (
             <button
@@ -119,64 +135,152 @@ export default function LearnPage() {
           </div>
         )}
 
+        {/* Lifestyle and mind tab */}
+        {activeTab === 'relax' && (
+        <div className="space-y-6">
 
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* Daily Routine Tab */}
-        {activeTab === 'routine' && routine && (
-          <div className="space-y-6">
-            <div className="card">
-              <h3 className="text-2xl font-bold mb-2">Your Ideal Daily Routine</h3>
-              <p className="text-gray-text">Personalized for {userDosha.charAt(0).toUpperCase() + userDosha.slice(1)} dosha</p>
+            {/* Mind Card */}
+            <div className="rounded-2xl shadow-md p-6 bg-gradient-to-br from-yellow-50 to-yellow-100">
+              <div className="flex flex-col items-center text-center">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/3048/3048398.png"
+                  alt="Exercise"
+                  className="w-28 h-28 mb-4"
+                />
+                <h3 className="text-xl font-semibold mb-2 text-yellow-800">Mind</h3>
+                <p className="text-yellow-700 text-sm mb-4">
+                  Calm your mind, reduce stress, and find inner balance.
+                </p>
+              </div>
+
+              <ul className="space-y-3 text-sm text-yellow-900">
+                {[
+                  { name: "Meditation", key: "meditation", icon: "🧘" },
+                  { name: "Stress Relief", key: "stress", icon: "😌" },
+                  { name: "Mind Insights", key: "insights", icon: "🧠" },
+                ].map((item) => (
+                  <li
+                    key={item.key}
+                    onClick={() => setSelectedTopic(item.key)}
+                    className={`cursor-pointer p-2 rounded-lg flex items-center gap-2 transition ${
+                      selectedTopic === item.key
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "hover:bg-yellow-50 hover:text-yellow-600"
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {Object.entries(routine).map(([period, data]) => (
-              <div key={period} className="card">
-                <h4 className="text-xl font-bold mb-2 capitalize">{period.replace('bed', 'Bed')} ({data.time})</h4>
-                <ul className="space-y-2">
-                  {data.activities.map((activity, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-primary text-xl">•</span>
-                      <span>{activity}</span>
-                    </li>
+            {/* Lifestyle Card */}
+            <div className="rounded-2xl shadow-md p-6 bg-gradient-to-br from-green-50 to-green-100">
+              <div className="flex flex-col items-center text-center">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/3774/3774291.png"
+                  alt="Lifestyle"
+                  className="w-28 h-28 mb-4"
+                />
+                <h3 className="text-xl font-semibold mb-2 text-green-800">Lifestyle</h3>
+                <p className="text-green-700 text-sm mb-4">
+                  Daily movement, better sleep, and a balanced routine.
+                </p>
+              </div>
+
+              <ul className="space-y-3 text-sm text-green-900">
+                {[
+                  { name: "Exercise Ideas", key: "exercise", icon: "🏃" },
+                  { name: "Sleep Tips", key: "sleep", icon: "😴" },
+                  { name: "Daily Routine", key: "routine", icon: "📅" },
+                ].map((item) => (
+                  <li
+                    key={item.key}
+                    onClick={() => setSelectedTopic(item.key)}
+                    className={`cursor-pointer p-2 rounded-lg flex items-center gap-2 transition ${
+                      selectedTopic === item.key
+                        ? "bg-green-100 text-green-700"
+                        : "hover:bg-green-50 hover:text-green-600"
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Animated Tips Section */}
+          <AnimatePresence>
+            {selectedTopic && (
+              <motion.div
+                key={selectedTopic}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white p-6 rounded-2xl shadow-md"
+              >
+                <h3 className="text-xl font-semibold mb-3 capitalize">
+                  {selectedTopic} Tips ({userDosha})
+                </h3>
+
+                <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                  {getTips(selectedTopic, userDosha).map((tip, i) => (
+                    <li key={i}>{tip}</li>
                   ))}
                 </ul>
-              </div>
-            ))}
-          </div>
-        )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+        </div>
+      )}
 
         {/* Seasonal Tips Tab */}
         {activeTab === 'seasonal' && (
-          <div className="card">
-            <h3 className="text-2xl font-bold mb-6">Seasonal Wellness Guide</h3>
-            <p className="text-gray-text mb-6">Adjust your routine and diet according to the season</p>
-            
-            <div className="space-y-6">
-              {['summer', 'winter', 'spring', 'autumn'].map(season => (
-                <div key={season} className="p-6 bg-gray-50 rounded-lg">
-                  <h4 className="text-xl font-bold mb-4 capitalize">{season}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h5 className="font-semibold mb-2">Foods to Eat:</h5>
-                      <p className="text-sm text-gray-text">
-                        {season === 'summer' ? 'Cooling fruits (watermelon, coconut), cucumbers, mint' :
-                         season === 'winter' ? 'Warming spices (ginger, cinnamon), root vegetables, ghee' :
-                         season === 'spring' ? 'Light foods, bitter greens, pungent spices' :
-                         'Grounding foods, sweet vegetables, warming grains'}
-                      </p>
+          <div className="p-6">
+            <h3 className="text-3xl font-bold mb-2">Seasonal Wellness Guide</h3>
+            <p className="text-gray-500 mb-8">Adjust your routine and diet according to the season</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              {Object.keys(seasonsData).map((key) => {
+                const season = seasonsData[key];
+
+                return (
+                  <motion.div
+                    key={key}
+                    whileHover={{ scale: 1.03 }}
+                    className="rounded-2xl overflow-hidden shadow-md bg-white"
+                  >
+                    <div
+                      className="h-40 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${season.image})` }}
+                    />
+
+                    <div className="p-5">
+                      <h4 className="text-xl font-semibold mb-3">{season.title}</h4>
+
+                      <div className="space-y-3">
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <h5 className="font-medium text-green-700 mb-1">🍽 Foods to Eat</h5>
+                          <p className="text-sm text-gray-600">{season.foods}</p>
+                        </div>
+
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <h5 className="font-medium text-blue-700 mb-1">🧘 Activities</h5>
+                          <p className="text-sm text-gray-600">{season.activities}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="font-semibold mb-2">Activities:</h5>
-                      <p className="text-sm text-gray-text">
-                        {season === 'summer' ? 'Swimming, evening walks, cooling pranayama' :
-                         season === 'winter' ? 'Indoor exercise, hot yoga, warming practices' :
-                         season === 'spring' ? 'Vigorous exercise, cleansing, active movement' :
-                         'Moderate activity, grounding practices, regular routines'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         )}
