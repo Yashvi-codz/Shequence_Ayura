@@ -105,7 +105,9 @@ export default function RecipesFromPantryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
+
+    <div className="min-h-full bg-gradient-to-br from-cream to-primary-light/30 pb-10">
+
       <div className="bg-white border-b-2 border-gray-200 py-6 px-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -162,7 +164,6 @@ export default function RecipesFromPantryPage() {
           <RecipeResults matchedRecipes={matchedRecipes.recipes} pantryItems={pantryItems} />
         )}
       </div>
-
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 py-3 lg:hidden">
         <div className="max-w-6xl mx-auto px-4 flex justify-around">
           <Link href="/app/dashboard" className="flex flex-col items-center text-gray-text hover:text-primary">

@@ -3,6 +3,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: '/dashboard', destination: '/app/dashboard', permanent: false },
+      { source: '/pantry', destination: '/app/pantry', permanent: false },
+      { source: '/lifestyle', destination: '/app/lifestyle', permanent: false },
+      { source: '/food', destination: '/app/food', permanent: false },
+      { source: '/seasons', destination: '/app/seasons', permanent: false },
+    ];
+  },
   images: {
     unoptimized: true,
   },

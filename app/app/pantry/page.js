@@ -133,6 +133,7 @@ export default function PantryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
+
       <div className="bg-white border-b-2 border-gray-200 py-6 px-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
@@ -219,7 +220,6 @@ export default function PantryPage() {
           </div>
         </div>
       </div>
-
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 py-3 lg:hidden">
         <div className="max-w-6xl mx-auto px-4 flex justify-around">
           <a href="/app/dashboard" className="flex flex-col items-center text-gray-text hover:text-primary">

@@ -256,7 +256,7 @@ export default function MealsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream to-primary-light/30 pb-24">
+    <div className="min-h-full bg-gradient-to-br from-cream to-primary-light/30 pb-10">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
           <div className="flex items-start justify-between flex-wrap gap-4">
