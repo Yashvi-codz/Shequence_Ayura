@@ -138,11 +138,12 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onClo
             onNavigate={onCloseMobile}
           />
           <SidebarNavItem
-            disabled
+            href="/app/habits"
+            active={isActive('/app/habits')}
             icon={<IconHabits />}
             label="Habits"
             collapsed={collapsed}
-            badge={!collapsed ? soonBadge : null}
+            onNavigate={onCloseMobile}
           />
           <SidebarNavItem
             href="/app/learn"
