@@ -74,45 +74,33 @@ export default function ChatPage() {
     setInput('');
     setTyping(true);
     
-    const token = Cookies.get('token');
-    const context = {
-      dosha: doshaResult?.dominant || 'pitta',
-      recentSleep: 7,
-      recentStress: 5,
-      recentDigestion: 7,
-      healthGoals: user?.healthGoals || []
-    };
-    
     try {
-      // Simulate AI delay
-await new Promise((resolve) => setTimeout(resolve, 1000));
+const res = await fetch('/api/chat', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    message: textToSend,
+    history: newMessages.slice(-6),
+    profile: {
+      dosha: doshaResult?.dominant || 'pitta',
+      goals: user?.healthGoals || [],
+      diet: user?.diet || 'not specified',
+      pantry: user?.pantry || []
+    }
+  })
+});
 
-// Convert input to lowercase for matching
-const lowerText = textToSend.toLowerCase();
+const data = await res.json();
 
-let response = "I'm sorry, I don't understand that yet. Try asking about diet, sleep, or stress 😊";
-
-// Simple rule-based responses
-if (lowerText.includes('eat') || lowerText.includes('diet')) {
-  response = "Based on your dosha, you should prefer warm, fresh, and light meals. Avoid overly spicy and processed foods.";
-}
-else if (lowerText.includes('sleep')) {
-  response = "Try sleeping before 10 PM, avoid screens before bed, and practice deep breathing for better sleep quality.";
-}
-else if (lowerText.includes('stress')) {
-  response = "To reduce stress, try meditation, pranayama, and spending time in nature 🌿";
-}
-else if (lowerText.includes('digestion')) {
-  response = "Improve digestion by eating warm food, avoiding cold drinks, and including ginger or jeera in meals.";
-}
-else if (lowerText.includes('routine')) {
-  response = "An ideal routine includes waking up early, light exercise, balanced meals, and proper sleep.";
+if (!res.ok) {
+  throw new Error(data?.reply || "API error");
 }
 
-// Create AI message
 const aiMsg = {
   role: 'assistant',
-  content: response,
+  content: data.reply || "Sorry, I couldn't respond properly. Please try again.",
   timestamp: new Date()
 };
       const updatedMessages = [...newMessages, aiMsg];
