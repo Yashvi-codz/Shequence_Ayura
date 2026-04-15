@@ -28,7 +28,7 @@ export default function PantryHighlightCard({
     : 'Best next step · unlock recipes';
 
   return (
-    <section className="group relative overflow-hidden rounded-[1.5rem] shadow-[0_18px_40px_-20px_rgba(180,90,30,0.35)] ring-1 ring-amber-200/45">
+    <section className="mb-3 group relative overflow-hidden rounded-[1.5rem] shadow-[0_18px_40px_-20px_rgba(180,90,30,0.35)] ring-1 ring-amber-200/45">
 
       {/* Background Layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#fff6eb] via-[#ffedd5] to-[#fed7aa]/90" />
