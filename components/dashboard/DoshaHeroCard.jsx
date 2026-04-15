@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 
-/* ✅ REQUIRED: Surface styles */
-
 const DOSHA_SURFACE = {
   vata: {
     gradient: "from-[#f8e8ec] via-[#faf4f2] to-[#fff9f5]",
@@ -43,19 +41,13 @@ export default function DoshaHeroCard({
   userName,
   doshaResult,
   doshaMeta,
-  todayMetrics
+  todayMetrics,
 }) {
-
   /* Get dominant dosha */
-
   const key = doshaResult?.dominant || "vata";
-
-  const surface =
-    DOSHA_SURFACE[key] ||
-    DOSHA_SURFACE.vata;
+  const surface = DOSHA_SURFACE[key] || DOSHA_SURFACE.vata;
 
   /* Dosha colors */
-
   const DOSHA_COLOR = {
     vata: "#be123c",
     pitta: "#b45309",
@@ -63,204 +55,118 @@ export default function DoshaHeroCard({
   };
 
   const info = {
-    color:
-      DOSHA_COLOR[key] ||
-      "#374151",
+    color: DOSHA_COLOR[key] || "#374151",
   };
 
   /* Percentage */
-
   const pct =
-    doshaResult?.percentages &&
-    doshaResult?.dominant
-      ? doshaResult.percentages[
-          doshaResult.dominant
-        ]
+    doshaResult?.percentages && doshaResult?.dominant
+      ? doshaResult.percentages[doshaResult.dominant]
       : null;
 
   /* ✅ Wellness Score = dominant % */
-
-  const wellnessScore =
-    doshaResult?.percentages?.[
-      doshaResult?.dominant
-    ] ?? 0;
+  const wellnessScore = doshaResult?.percentages?.[doshaResult?.dominant] ?? 0;
 
   return (
+    <div className="pb-3">
+      {/* HERO */}
+      <section className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white/70 backdrop-blur">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary-light/40 to-transparent" />
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 20%, rgba(39,174,96,0.15), transparent 35%), radial-gradient(circle at 80% 30%, rgba(184,216,200,0.35), transparent 40%)",
+          }}
+        />
 
-    <section
-      className={`group relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br ${surface.gradient} p-4 shadow-[0_16px_40px_-20px_rgba(80,60,50,0.35)] ring-1 ${surface.ring} sm:p-5 lg:p-6`}
-    >
+        <div className="relative p-5 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6 items-center">
+            {/* LEFT */}
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-dark-text leading-tight">
+                Namaste <span>{userName || "User"}</span>
+              </h1>
 
-      {/* Atmosphere */}
-
-      <div
-        className={`pointer-events-none absolute -right-1/4 -top-1/4 h-[60%] w-[60%] rounded-full bg-gradient-to-br ${surface.gradient2} blur-3xl`}
-      />
-
-      <div
-        className={`pointer-events-none absolute right-1/4 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full blur-3xl ${surface.blob}`}
-      />
-
-      {/* Grid */}
-
-      <div className="relative grid gap-5 lg:grid-cols-[1fr_minmax(220px,34%)] lg:gap-6 lg:items-stretch">
-
-        {/* LEFT */}
-
-        <div className="flex min-w-0 flex-col justify-center space-y-4">
-
-          {/* Badge */}
-
-          <div className="flex flex-wrap items-center gap-2">
-
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ring-1 ${surface.badge}`}
-            >
-              Prakriti
-            </span>
-
-            {pct != null && (
-
-              <span className="rounded-full bg-white/75 px-2.5 py-1 text-[11px] font-medium text-stone-600 ring-1 ring-stone-200/60">
-
-                {pct}% of your pattern
-
-              </span>
-
-            )}
-
-          </div>
-
-          {/* Title */}
-
-          <div className="space-y-1">
-
-            <p className="text-xs font-medium tracking-wide text-stone-500">
-
-              {userName ? (
-                <>
-                  <span className="text-stone-400">
-                    Welcome back,
-                  </span>{" "}
-                  <span className="text-stone-800">
-                    {userName}
-                  </span>
-                </>
-              ) : (
-                "Your constitution"
-              )}
-
-            </p>
-
-            <div className="flex flex-wrap items-baseline gap-2">
-
-              <h2
-                className={`text-3xl font-semibold tracking-tight sm:text-4xl ${surface.accent}`}
-              >
-                {doshaMeta?.name}
-              </h2>
-
-              <span className="text-3xl sm:text-4xl">
-                {doshaMeta?.emoji}
-              </span>
-
-            </div>
-
-            <p
-              className={`text-base font-medium sm:text-lg ${surface.accentSoft}`}
-            >
-              {doshaMeta?.tagline}
-            </p>
-
-          </div>
-
-          {/* Description */}
-
-          <p className="max-w-xl border-l-2 border-stone-300/40 pl-3 text-sm leading-relaxed text-stone-600">
-
-            {doshaMeta?.description}
-
-          </p>
-
-        </div>
-
-        {/* RIGHT */}
-
-        <div className="relative flex min-h-[180px] flex-col justify-between gap-4 rounded-xl border border-white/50 bg-white/25 p-4 shadow-inner backdrop-blur-md sm:min-h-[200px]">
-
-          <div className="flex flex-1 items-center justify-center">
-
-            <div className="text-center">
-
-              {/* Score Circle */}
-
-              <div
-                className="w-32 h-32 rounded-full border-8 flex items-center justify-center mx-auto mb-2"
-                style={{
-                  borderColor: info.color
-                }}
-              >
-
-                <div>
-
-                  <div
-                    className="text-3xl font-bold"
-                    style={{
-                      color: info.color
-                    }}
-                  >
-                    {wellnessScore}%
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    Score
-                  </div>
-
+              <p className="mt-2 text-sm text-gray-text max-w-xl">
+                Personalized wellness, powered by Ayurveda & AI.
+              </p>
+              <p className="text-sm text-gray-text max-w-xl">
+                Small, mindful steps toward balance—every single day.
+              </p>
+              {/* Tags */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-gray-200 px-2 py-1 text-[10px] font-medium text-gray-text">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Stay Consistent
                 </div>
 
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-gray-200 px-2 py-1 text-[10px] font-medium text-gray-text">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+                  Stay Balanced
+                </div>
               </div>
-
-              {/* Metrics */}
-
-              <div className="text-xs text-gray-500">
-
-                Sleep {todayMetrics?.sleep ?? 8}/10 |
-                Stress {todayMetrics?.stress ?? 7}/10
-
-                <br />
-
-                Digestion {todayMetrics?.digestion ?? 9}/10 |
-                Energy {todayMetrics?.energy ?? 7}/10
-
-              </div>
-
             </div>
 
+            {/* RIGHT */}
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              {/* Dosha Name */}
+              <h3
+                className="text-base font-semibold text-center mb-3"
+                style={{ color: info.color }}
+              >
+                {doshaMeta?.name} {doshaMeta?.emoji}
+              </h3>
+              <div className="flex items-center justify-center gap-6">
+                {/* LEFT: Dosha % */}
+                <ul className="text-xs text-gray-600 space-y-1 text-right">
+                  <li className="text-rose-600">
+                    Vata: {doshaResult?.percentages?.vata ?? 0}%
+                  </li>
+                  <li className="text-amber-600">
+                    Pitta: {doshaResult?.percentages?.pitta ?? 0}%
+                  </li>
+                  <li className="text-emerald-600">
+                    Kapha: {doshaResult?.percentages?.kapha ?? 0}%
+                  </li>
+                </ul>
+
+                {/* CENTER: Circle */}
+                <div
+                  className="w-20 h-20 rounded-full border-4 flex items-center justify-center"
+                  style={{ borderColor: info.color }}
+                >
+                  <div className="text-center">
+                    <div
+                      className="text-lg font-bold"
+                      style={{ color: info.color }}
+                    >
+                      {wellnessScore}%
+                    </div>
+                    <div className="text-[9px] text-gray-500">Balance</div>
+                  </div>
+                </div>
+
+                {/* RIGHT: Metrics */}
+                <ul className="text-xs text-gray-600 space-y-1">
+                  <li>Sleep: {todayMetrics?.sleep ?? 8}/10</li>
+                  <li>Stress: {todayMetrics?.stress ?? 7}/10</li>
+                  <li>Digestion: {todayMetrics?.digestion ?? 9}/10</li>
+                  <li>Energy: {todayMetrics?.energy ?? 7}/10</li>
+                </ul>
+              </div>
+              {/* Button */}
+              <Link
+                href="/app/quiz"
+                className="mt-4 block w-full bg-primary text-white py-1.5 text-sm rounded-md hover:bg-primary-dark transition text-center"
+              >
+                Retake Quiz
+              </Link>
+            </div>
           </div>
-
-          {/* Button */}
-
-          <div className="relative space-y-2 border-t border-stone-200/40 pt-3">
-
-            <Link
-              href="/app/quiz"
-              className="flex w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-[#faf6f0] shadow-md ring-1 ring-stone-800/20 hover:bg-stone-800"
-            >
-              Retake prakriti test
-            </Link>
-
-            <p className="text-center text-[10px] text-stone-500 sm:text-left">
-              Refresh when seasons or digestion shift.
-            </p>
-
-          </div>
-
         </div>
-
-      </div>
-
-    </section>
-
+      </section>
+    </div>
   );
-
 }
