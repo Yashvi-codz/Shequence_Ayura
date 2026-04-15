@@ -1,45 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { RECIPES_DB } from "@/lib/data/recipes";
-
-function Chip({ children }) {
-  return (
-    <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-gray-100 text-gray-800 border-gray-200">
-      {children}
-    </span>
-  );
-}
 
 function MealCard({ type, meal, onSwap, swapping }) {
   if (!meal) return null;
 
   return (
     <div className="bg-white border rounded-2xl p-4 w-full h-full flex flex-col hover:shadow-md transition">
-      {/* TYPE */}
       <div className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">
         {type}
       </div>
 
-      {/* IMAGE WRAPPER (IMPORTANT FIX) */}
       <div className="w-full h-36 rounded-xl overflow-hidden mb-3">
         <img src={meal.image} className="w-full h-full object-cover" />
       </div>
 
-      {/* NAME */}
       <div className="font-bold text-dark-text text-base">{meal.name}</div>
-
-      {/* NUTRITION */}
       <div className="text-sm text-gray-text mt-1">{meal.nutrition}</div>
 
-      {/* DESCRIPTION */}
       <div className="text-xs text-gray-text mt-2 line-clamp-2">
         {meal.doshaReason}
       </div>
 
-      {/* BUTTON (push to bottom) */}
       <button
         onClick={onSwap}
         className="mt-auto pt-3 w-full py-2 text-sm rounded-xl border bg-gray-50 hover:bg-gray-100 transition"
@@ -51,17 +34,16 @@ function MealCard({ type, meal, onSwap, swapping }) {
 }
 
 export default function MealsPage() {
-  const router = useRouter();
-
   const [activeTab, setActiveTab] = useState("plan");
   const [activeDay, setActiveDay] = useState("Monday");
-  const [toast, setToast] = useState(null);
   const [weeklyPlan, setWeeklyPlan] = useState([]);
-  const [groceryList, setGroceryList] = useState([]);
-  const [checkedGrocery, setCheckedGrocery] = useState({});
   const [swappingDay, setSwappingDay] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [modal, setModal] = useState(null);
+  const [groceryList, setGroceryList] = useState([]);
+  const [newItem, setNewItem] = useState("");
+  const [newQty, setNewQty] = useState("");
 
-  // INIT PLAN (DUMMY GENERATION USING RECIPES_DB)
   useEffect(() => {
     const days = [
       "Monday",
@@ -84,15 +66,13 @@ export default function MealsPage() {
     }));
 
     setWeeklyPlan(plan);
-    setGroceryList(generateGrocery(plan));
   }, []);
 
-useEffect(() => {
-  if (!toast) return;
-
-  const t = setTimeout(() => setToast(null), 2500);
-  return () => clearTimeout(t);
-}, [toast]);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   function getRandomMeal() {
     const r = RECIPES_DB[Math.floor(Math.random() * RECIPES_DB.length)];
@@ -110,48 +90,106 @@ useEffect(() => {
     setSwappingDay(`${day}-${type}`);
 
     setWeeklyPlan((prev) =>
-      prev.map((d) => {
-        if (d.day !== day) return d;
-
-        return {
-          ...d,
-          meals: {
-            ...d.meals,
-            [type]: getRandomMeal(),
-          },
-        };
-      }),
+      prev.map((d) =>
+        d.day === day
+          ? {
+              ...d,
+              meals: {
+                ...d.meals,
+                [type]: getRandomMeal(),
+              },
+            }
+          : d,
+      ),
     );
 
     setTimeout(() => setSwappingDay(null), 400);
   }
 
-  function generateGrocery(plan) {
-    const items = new Set();
-    plan.forEach((d) => {
-      Object.values(d.meals).forEach((m) => {
-        m.ingredients.forEach((i) => items.add(i));
-      });
-    });
-    return Array.from(items);
+  function openModal(title, content) {
+    setModal({ title, content });
   }
 
-  function toggleGrocery(item) {
-    setCheckedGrocery((prev) => ({
+  function closeModal() {
+    setModal(null);
+  }
+  function addGroceryItem() {
+    if (!newItem.trim()) return;
+
+    setGroceryList((prev) => [
       ...prev,
-      [item]: !prev[item],
-    }));
+      { name: newItem, quantity: newQty || "-", checked: false },
+    ]);
+
+    setNewItem("");
+    setNewQty("");
+  }
+
+  // ✅ TOGGLE
+  function toggleGrocery(index) {
+    setGroceryList((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, checked: !item.checked } : item,
+      ),
+    );
+  }
+
+  // ✅ REMOVE
+  function removeItem(index) {
+    setGroceryList((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // ✅ ADD FROM RECIPES
+  function addIngredientsToGrocery(ingredients) {
+    setGroceryList((prev) => {
+      const existing = prev.map((i) => i.name.toLowerCase());
+
+      const newItems = ingredients
+        .filter((ing) => !existing.includes(ing.toLowerCase()))
+        .map((ing) => ({
+          name: ing,
+          quantity: "-",
+          checked: false,
+        }));
+
+      return [...prev, ...newItems];
+    });
   }
 
   return (
     <div className="min-h-full bg-gradient-to-br from-cream to-primary-light/30 pb-10">
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow-lg z-50 transition">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow-lg z-50">
           {toast}
         </div>
       )}
+      {modal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-[90%] max-w-md rounded-2xl p-5 shadow-xl relative animate-fadeIn">
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-black"
+            >
+              ✕
+            </button>
+
+            {/* TITLE */}
+            <h2 className="text-xl font-bold mb-3">{modal.title}</h2>
+
+            {/* CONTENT */}
+            <div className="space-y-2 max-h-64 overflow-y-auto text-sm text-gray-700">
+              {modal.content.map((item, i) => (
+                <div key={i} className="border-b pb-1">
+                  • {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* HEADER */}
         <h1 className="text-4xl font-black text-dark-text mb-6">
           Weekly Meal Planner
         </h1>
@@ -159,36 +197,29 @@ useEffect(() => {
         {/* TABS */}
         <div className="bg-white border rounded-2xl p-2 mb-6">
           <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: "plan", label: "Plan" },
-              { id: "recipes", label: "Recipes" },
-              { id: "grocery", label: "Grocery" },
-            ].map((t) => (
+            {["plan", "recipes", "grocery"].map((t) => (
               <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
+                key={t}
+                onClick={() => setActiveTab(t)}
                 className={`py-2 rounded-xl font-bold ${
-                  activeTab === t.id
-                    ? "bg-primary text-white"
-                    : "text-gray-text"
+                  activeTab === t ? "bg-primary text-white" : "text-gray-text"
                 }`}
               >
-                {t.label}
+                {t}
               </button>
             ))}
           </div>
         </div>
 
-        {/* PLAN TAB */}
+        {/* PLAN */}
         {activeTab === "plan" && (
           <>
-            {/* DAY SELECTOR */}
             <div className="flex gap-2 mb-4 overflow-x-auto">
               {weeklyPlan.map((d) => (
                 <button
                   key={d.day}
                   onClick={() => setActiveDay(d.day)}
-                  className={`px-4 py-2 rounded-xl font-semibold ${
+                  className={`px-4 py-2 rounded-xl ${
                     activeDay === d.day
                       ? "bg-primary text-white"
                       : "bg-white border"
@@ -199,88 +230,60 @@ useEffect(() => {
               ))}
             </div>
 
-            {/* MEALS */}
             {weeklyPlan
               .filter((d) => d.day === activeDay)
               .map((d) => (
-                <div className="grid grid-cols-2 gap-4 pb-3">
+                <div key={d.day} className="grid grid-cols-2 gap-4">
                   {["breakfast", "lunch", "dinner", "snacks"].map((type) => (
-                    <div
-                      className={`rounded-2xl p-4 border hover:shadow-md transition ${
-                        type === "breakfast"
-                          ? "bg-yellow-50 border-yellow-100"
-                          : type === "lunch"
-                            ? "bg-green-50 border-green-100"
-                            : type === "dinner"
-                              ? "bg-purple-50 border-purple-100"
-                              : "bg-pink-50 border-pink-100"
-                      }`}
-                    >
-                      <MealCard
-                        type={type}
-                        meal={d.meals[type]}
-                        swapping={swappingDay === `${d.day}-${type}`}
-                        onSwap={() => swapMeal(d.day, type)}
-                      />
-                    </div>
+                    <MealCard
+                      key={type}
+                      type={type}
+                      meal={d.meals[type]}
+                      swapping={swappingDay === `${d.day}-${type}`}
+                      onSwap={() => swapMeal(d.day, type)}
+                    />
                   ))}
                 </div>
               ))}
           </>
         )}
 
-        {/* RECIPES TAB */}
+        {/* RECIPES */}
         {activeTab === "recipes" && (
           <div className="space-y-4">
             {RECIPES_DB.map((r) => (
               <div
                 key={r.id}
-                className="flex gap-4 p-4 rounded-2xl bg-white border hover:shadow-md transition"
+                className="flex gap-4 p-4 rounded-2xl bg-white border"
               >
-                {/* IMAGE */}
                 <img
                   src={r.image}
-                  className="w-28 h-28 object-cover rounded-xl"
+                  className="w-28 h-28 rounded-xl object-cover"
                 />
 
-                {/* CONTENT */}
                 <div className="flex-1">
-                  <div className="text-lg font-bold text-dark-text">
-                    {r.title}
-                  </div>
+                  <div className="font-bold">{r.title}</div>
+                  <div className="text-sm">{r.time}</div>
+                  <div className="text-xs">{r.why}</div>
 
-                  <div className="text-sm text-gray-text">{r.time}</div>
-
-                  <div className="text-sm mt-1">{r.nutrition}</div>
-
-                  <div className="text-xs text-gray-text mt-1">{r.why}</div>
-
-                  {/* BUTTONS */}
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <button
-                      className="text-xs px-3 py-1 rounded-lg bg-gray-100"
-                      onClick={() => setToast(r.steps.join(" • "))}
+                      className="text-xs px-2 py-1 rounded-md bg-gray-100"
+                      onClick={() => openModal("Steps", r.steps)}
                     >
                       Steps
                     </button>
 
                     <button
-                      className="text-xs px-3 py-1 rounded-lg bg-gray-100"
-                      onClick={() => setToast(r.ingredients.join(" • "))}
+                      className="text-xs px-2 py-1 rounded-md bg-gray-100"
+                      onClick={() => openModal("Ingredients", r.ingredients)}
                     >
                       Ingredients
                     </button>
 
                     <button
-                      className="text-xs px-3 py-1 rounded-lg bg-primary text-white"
-                      onClick={() => {
-                        setActiveTab("grocery");
-                        setCheckedGrocery((prev) => {
-                          const next = { ...prev };
-                          r.ingredients.forEach((i) => (next[i] = true));
-                          return next;
-                        });
-                      }}
+                      className="bg-primary text-white px-3 py-1 rounded-lg"
+                      onClick={() => addIngredientsToGrocery(r.ingredients)}
                     >
                       Add to Grocery
                     </button>
@@ -291,28 +294,57 @@ useEffect(() => {
           </div>
         )}
 
-        {/* GROCERY TAB */}
+        {/* GROCERY */}
         {activeTab === "grocery" && (
-          <div className="border rounded-xl p-4 bg-white">
+          <div className="bg-white border rounded-xl p-4">
             <h2 className="text-2xl font-bold mb-4">Grocery List</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {groceryList.map((item) => {
-                const checked = checkedGrocery[item];
+            {/* ADD INPUT */}
+            <div className="flex gap-2 mb-4">
+              <input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Item"
+                className="flex-1 border rounded-xl px-3 py-2"
+              />
 
-                return (
-                  <button
-                    key={item}
-                    onClick={() => toggleGrocery(item)}
-                    className={`flex justify-between border rounded-xl px-4 py-3 ${
-                      checked ? "bg-green-50 border-green-200" : "bg-white"
-                    }`}
+              <input
+                value={newQty}
+                onChange={(e) => setNewQty(e.target.value)}
+                placeholder="Qty"
+                className="w-24 border rounded-xl px-3 py-2"
+              />
+
+              <button
+                onClick={addGroceryItem}
+                className="bg-primary text-white px-4 rounded-xl"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* LIST */}
+            <div className="space-y-2">
+              {groceryList.map((item, index) => (
+                <div
+                  key={index}
+                  className={`flex justify-between items-center border rounded-xl px-4 py-3 ${
+                    item.checked ? "bg-green-50" : ""
+                  }`}
+                >
+                  <div
+                    onClick={() => toggleGrocery(index)}
+                    className="flex-1 cursor-pointer"
                   >
-                    <span className="capitalize">{item}</span>
-                    <span>{checked ? "✓" : ""}</span>
-                  </button>
-                );
-              })}
+                    {item.name} ({item.quantity})
+                  </div>
+
+                  <div className="flex gap-3 items-center">
+                    {item.checked && "✓"}
+                    <button onClick={() => removeItem(index)}>✕</button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
