@@ -185,21 +185,28 @@ const aiMsg = {
       <div className="bg-white border-b-2 border-gray-200 py-4 px-4 flex-shrink-0">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/app/dashboard" className="text-primary hover:text-green-600">
-              ← Back
-            </Link>
             <div>
               <h1 className="text-2xl font-bold text-dark-text flex items-center gap-2">
                 💬 Chat with Ayura
               </h1>
-              <p className="text-sm text-gray-text">Your personalized wellness companion</p>
+              <p className="text-sm text-gray-text">
+                Your personalized wellness companion
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {user && doshaResult && (
               <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
-                <span className="text-2xl">{doshaResult.dominant === 'vata' ? '🌬️' : doshaResult.dominant === 'pitta' ? '🔥' : '💧'}</span>
-                <span className="font-semibold text-primary capitalize">{doshaResult.dominant}</span>
+                <span className="text-2xl">
+                  {doshaResult.dominant === "vata"
+                    ? "🌬️"
+                    : doshaResult.dominant === "pitta"
+                      ? "🔥"
+                      : "💧"}
+                </span>
+                <span className="font-semibold text-primary capitalize">
+                  {doshaResult.dominant}
+                </span>
               </div>
             )}
             {messages.length > 0 && (
@@ -219,14 +226,29 @@ const aiMsg = {
         <div className="max-w-4xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-5xl mb-4">🕉️</div>
-                <p className="text-gray-text">Loading your conversation...</p>
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="mb-4 flex justify-center">
+                    <img
+                      src="/img/Logo.jpeg"
+                      alt="Logo"
+                      className="w-24 h-24 object-contain"
+                    />
+                  </div>
+                  <p className="text-gray-text">Loading your conversation...</p>
+                </div>
               </div>
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-7xl mb-6">🕉️</div>
+              <div className="mb-6 flex justify-center">
+                <img
+                  src="/img/Logo.jpeg"
+                  alt="Logo"
+                  className="w-32 h-32 object-contain"
+                />
+              </div>
+
               <h2 className="text-3xl font-bold mb-3 text-dark-text">
                 Welcome to Ayura Wellness Chat
               </h2>
@@ -237,10 +259,15 @@ const aiMsg = {
               {/* Quick Prompt Categories */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto text-left">
                 {quickPrompts.map((category, idx) => (
-                  <div key={idx} className="card hover:shadow-lg transition-shadow">
+                  <div
+                    key={idx}
+                    className="card hover:shadow-lg transition-shadow"
+                  >
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-3xl">{category.icon}</span>
-                      <h3 className="text-lg font-bold text-dark-text">{category.category}</h3>
+                      <h3 className="text-lg font-bold text-dark-text">
+                        {category.category}
+                      </h3>
                     </div>
                     <div className="space-y-2">
                       {category.prompts.map((prompt, pIdx) => (
@@ -259,7 +286,9 @@ const aiMsg = {
 
               {/* Popular Questions */}
               <div className="mt-12">
-                <p className="text-sm text-gray-text mb-4">Or try these popular questions:</p>
+                <p className="text-sm text-gray-text mb-4">
+                  Or try these popular questions:
+                </p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   {exampleQuestions.map((q, idx) => (
                     <button
@@ -278,10 +307,10 @@ const aiMsg = {
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div className="flex gap-3 max-w-[80%]">
-                    {msg.role === 'assistant' && (
+                    {msg.role === "assistant" && (
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
                         A
                       </div>
@@ -289,22 +318,27 @@ const aiMsg = {
                     <div>
                       <div
                         className={`p-4 rounded-2xl ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-white rounded-br-none'
-                            : 'bg-white text-dark-text shadow-md rounded-bl-none'
+                          msg.role === "user"
+                            ? "bg-primary text-white rounded-br-none"
+                            : "bg-white text-dark-text shadow-md rounded-bl-none"
                         }`}
                       >
-                        <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-base leading-relaxed whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
                       </div>
                       {msg.timestamp && (
                         <p className="text-xs text-gray-text mt-1 px-2">
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(msg.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       )}
                     </div>
-                    {msg.role === 'user' && (
+                    {msg.role === "user" && (
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-dark-text font-bold">
-                        {user?.name?.[0]?.toUpperCase() || 'U'}
+                        {user?.name?.[0]?.toUpperCase() || "U"}
                       </div>
                     )}
                   </div>
@@ -319,9 +353,18 @@ const aiMsg = {
                     </div>
                     <div className="bg-white p-4 rounded-2xl rounded-bl-none shadow-md">
                       <div className="flex space-x-2">
-                        <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                        <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                        <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        <div
+                          className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        ></div>
+                        <div
+                          className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        ></div>
+                        <div
+                          className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        ></div>
                       </div>
                     </div>
                   </div>
@@ -341,7 +384,7 @@ const aiMsg = {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !typing && sendMessage()}
+              onKeyPress={(e) => e.key === "Enter" && !typing && sendMessage()}
               placeholder="Ask Ayura anything about your wellness..."
               className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:outline-none text-base"
               disabled={typing}
@@ -354,12 +397,19 @@ const aiMsg = {
               Send
             </button>
           </div>
-          
+
           {/* Quick Actions Below Input */}
           {messages.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              <p className="text-xs text-gray-text w-full mb-1">Quick suggestions:</p>
-              {['Tell me more', 'What else?', 'Any alternatives?', 'Explain further'].map((suggestion, idx) => (
+              <p className="text-xs text-gray-text w-full mb-1">
+                Quick suggestions:
+              </p>
+              {[
+                "Tell me more",
+                "What else?",
+                "Any alternatives?",
+                "Explain further",
+              ].map((suggestion, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
